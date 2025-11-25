@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE EPIC BURGER | Cinematic Experience</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@300;500;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --neon: #ccff00; /* Cyber Lime */
+            --dark: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            background-color: var(--dark);
+            color: #ffffff;
+            font-family: 'Manrope', sans-serif;
+            overflow-x: hidden;
+            cursor: none; /* Ocultamos cursor nativo */
+        }
+
+        h1, h2, .font-display {
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- Custom Cursor --- */
+        #cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--neon);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        body.hovered #cursor {
+            width: 80px;
+            height: 80px;
+            background-color: var(--neon);
+            border-color: transparent;
+            opacity: 0.8;
+            mix-blend-mode: exclusion;
+        }
+
+        /* --- Noise Texture Overlay --- */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 9000;
+        }
+
+        /* --- Video Background --- */
+        .video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            filter: brightness(0.4) contrast(1.1);
+        }
+
+        /* --- Marquee (Texto Infinito) --- */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- Glass Cards & Buttons --- */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-neon {
+            position: relative;
+            background: var(--neon);
+            color: black;
+            font-weight: 800;
+            text-transform: uppercase;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .btn-neon::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 0;
+            mix-blend-mode: overlay;
+        }
+        .btn-neon:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        .btn-neon:hover {
+            box-shadow: 0 0 30px rgba(204, 255, 0, 0.4);
+        }
+
+        /* --- Smooth Scroll Container (Lenis) --- */
+        html.lenis { height: auto; } 
+        .lenis.lenis-smooth { scroll-behavior: auto; } 
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; } 
+        .lenis.lenis-stopped { overflow: hidden; }
+
+        /* --- Image Hover Zoom --- */
+        .zoom-img-container { overflow: hidden; }
+        .zoom-img-container img { transition: transform 1.2s ease; }
+        .zoom-img-container:hover img { transform: scale(1.1); }
+
+        @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            50% { top: 100%; }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-[#ccff00] selection:text-black">
+
+    <div id="preloader" class="fixed inset-0 z-[9999] bg-[#050505] flex flex-col items-center justify-center text-[#ccff00]">
+        <div class="font-display text-9xl md:text-[12rem] leading-none" id="loader-count">0%</div>
+        <div class="text-xs uppercase tracking-[0.5em] mt-4 text-white">Loading Experience</div>
+    </div>
+
+    <div id="cursor"></div>
+    
+    <div class="noise-overlay"></div>
+
+    <nav class="fixed top-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference text-white">
+        <a href="#" class="text-3xl font-display tracking-tighter hover-trigger" data-cursor="LOGO">EPIC<span class="text-[#ccff00]">.</span></a>
+        
+        <div class="hidden md:flex gap-10 font-bold text-xs uppercase tracking-[0.2em]">
+            <a href="#menu" class="hover:text-[#ccff00] transition-colors hover-trigger">Menu</a>
+            <a href="#about" class="hover:text-[#ccff00] transition-colors hover-trigger">Craft</a>
+            <a href="#win" class="hover:text-[#ccff00] transition-colors hover-trigger">Win</a>
+        </div>
+
+        <button id="open-order-btn" class="border border-white/20 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all hover-trigger" data-cursor="HUNGRY?">
+            Order Now
+        </button>
+    </nav>
+
+    <section class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        <video autoplay muted loop playsinline class="video-bg" poster="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1998&auto=format&fit=crop">
+            <source src="https://videos.pexels.com/video-files/3622355/3622355-uhd_2560_1440_25fps.mp4" type="video/mp4">
+        </video>
+
+        <div class="relative z-10 container mx-auto px-4 text-center">
+            <h2 class="text-[#ccff00] text-sm md:text-base font-bold tracking-[0.5em] mb-4 overflow-hidden animate-reveal">
+                PREMIUM TASTE
+            </h2>
+            <h1 class="font-display text-[15vw] leading-[0.8] mix-blend-overlay text-white opacity-90 animate-title">
+                THE REAL<br>BURGER
+            </h1>
+            <div class="mt-12 flex justify-center overflow-hidden">
+                <a href="#win" class="btn-neon px-10 py-5 rounded-none text-lg tracking-widest hover-trigger animate-reveal-btn">
+                    <span class="relative z-10">Try Your Luck</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+            <span class="text-[10px] uppercase tracking-widest">Scroll</span>
+            <div class="w-[1px] h-12 bg-gradient-to-b from-white to-transparent"></div>
+        </div>
+    </section>
+
+    <div class="bg-[#ccff00] text-black py-4 border-y-4 border-black rotate-[-2deg] scale-110 z-20 relative origin-left">
+        <div class="marquee-container font-display text-4xl md:text-6xl uppercase leading-none">
+            <div class="marquee-content">
+                ★ 100% Angus Beef ★ Fresh Ingredients ★ No Fake Stuff ★ Melted Cheese ★ Grill Master ★ 100% Angus Beef ★ Fresh Ingredients ★ No Fake Stuff ★ Melted Cheese ★ Grill Master
+            </div>
+        </div>
+    </div>
+
+    <section id="about" class="py-32 bg-black relative">
+        <div class="container mx-auto px-6 grid md:grid-cols-2 gap-20 items-center">
+            
+            <div class="relative h-[600px] w-full reveal-image">
+                <div class="absolute inset-0 bg-[#1a1a1a] overflow-hidden zoom-img-container rounded-none transform rotate-[-3deg] border border-white/10 z-10">
+                    <img src="https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=2071&auto=format&fit=crop" class="w-full h-full object-cover opacity-80" alt="Chef">
+                </div>
+                <div class="absolute inset-0 bg-[#ccff00] translate-x-4 translate-y-4 z-0"></div>
+                
+                <div class="absolute -bottom-10 -right-10 glass-panel p-6 max-w-xs z-20 backdrop-blur-xl border-l-4 border-[#ccff00] parallax-element" data-speed="0.05">
+                    <h4 class="font-display text-2xl mb-2">Flame Grilled</h4>
+                    <p class="text-xs text-gray-400">We don't use microwaves. We use fire. Real fire for real flavor.</p>
+                </div>
+            </div>
+
+            <div class="text-content pl-0 md:pl-10">
+                <h2 class="text-6xl md:text-8xl font-display leading-[0.9] mb-8 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">
+                    NOT FAST<br>JUST FURIOUS.
+                </h2>
+                <p class="text-xl text-gray-400 font-light mb-8 max-w-md leading-relaxed">
+                    Forget what you know about burgers. We are disrupting the food chain with high-end ingredients and aggressive flavor profiles.
+                </p>
+                
+                <div class="grid grid-cols-2 gap-8 mb-10">
+                    <div class="border-t border-[#ccff00] pt-4">
+                        <span class="block text-4xl font-display mb-1 counter" data-target="25">0</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-500">Gourmet Spices</span>
+                    </div>
+                    <div class="border-t border-[#ccff00] pt-4">
+                        <span class="block text-4xl font-display mb-1 counter" data-target="100">0</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-500">% Organic Beef</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Sizzle Reel -->
+    <section class="py-20 bg-[#050505]">
+        <div class="container mx-auto px-6 mb-10">
+            <h2 class="text-4xl md:text-6xl font-display mb-2 uppercase">Behind the <span class="text-[#ccff00]">Grill</span></h2>
+        </div>
+        
+        <div class="flex flex-col md:flex-row h-[600px] w-full gap-2 px-2">
+            
+            <div class="relative flex-1 hover:flex-[3] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden group rounded-2xl cursor-pointer">
+                <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                    <source src="https://videos.pexels.com/video-files/3298401/3298401-uhd_2732_1440_25fps.mp4" type="video/mp4">
+                </video>
+                <div class="absolute bottom-0 left-0 p-8 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 class="font-display text-4xl text-white">Fresh Cuts</h3>
+                    <p class="text-[#ccff00] uppercase tracking-widest text-xs">Daily Preparation</p>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-500"></div>
+            </div>
+
+            <div class="relative flex-1 hover:flex-[3] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden group rounded-2xl cursor-pointer">
+                <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                    <source src="https://videos.pexels.com/video-files/5221128/5221128-uhd_2560_1440_25fps.mp4" type="video/mp4">
+                </video>
+                <div class="absolute bottom-0 left-0 p-8 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 class="font-display text-4xl text-white">The Sizzle</h3>
+                    <p class="text-[#ccff00] uppercase tracking-widest text-xs">High Heat only</p>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-500"></div>
+            </div>
+
+            <div class="relative flex-1 hover:flex-[3] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden group rounded-2xl cursor-pointer">
+                <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                    <source src="https://videos.pexels.com/video-files/8477404/8477404-hd_1920_1080_24fps.mp4" type="video/mp4">
+                </video>
+                <div class="absolute bottom-0 left-0 p-8 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 class="font-display text-4xl text-white">Plating</h3>
+                    <p class="text-[#ccff00] uppercase tracking-widest text-xs">Perfection</p>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-500"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- The Anatomy (Sticky Scroll Marketing) -->
+    <section class="py-24 bg-black relative z-20">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row gap-10">
+            
+            <!-- Left: Scrollable Text -->
+            <div class="w-full md:w-1/2 py-[20vh]">
+                
+                <!-- Step 1 -->
+                <div class="anatomy-step min-h-[80vh] flex flex-col justify-center border-l-2 border-white/10 pl-10 relative group" data-index="0">
+                    <span class="absolute -left-[9px] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ccff00] rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity duration-300 shadow-[0_0_20px_#ccff00]"></span>
+                    <h3 class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] to-white font-display text-7xl md:text-8xl mb-6 translate-x-[-50px] opacity-0 transition-all duration-700 group-[.active]:translate-x-0 group-[.active]:opacity-100">01. BUN</h3>
+                    <p class="text-2xl text-gray-400 font-light leading-relaxed max-w-md translate-y-10 opacity-0 transition-all duration-700 delay-100 group-[.active]:translate-y-0 group-[.active]:opacity-100">
+                        Artisan brioche, baked fresh every morning at 4 AM. Lightly toasted with garlic butter for that signature crunch.
+                    </p>
+                    <div class="mt-6 flex gap-4 opacity-0 transition-all duration-700 delay-200 group-[.active]:opacity-100">
+                        <span class="px-3 py-1 border border-[#ccff00] text-[#ccff00] text-xs uppercase tracking-widest rounded-full">Fluffy</span>
+                        <span class="px-3 py-1 border border-white/20 text-gray-400 text-xs uppercase tracking-widest rounded-full">Golden</span>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="anatomy-step min-h-[80vh] flex flex-col justify-center border-l-2 border-white/10 pl-10 relative group" data-index="1">
+                    <span class="absolute -left-[9px] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ccff00] rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity duration-300 shadow-[0_0_20px_#ccff00]"></span>
+                    <h3 class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] to-white font-display text-7xl md:text-8xl mb-6 translate-x-[-50px] opacity-0 transition-all duration-700 group-[.active]:translate-x-0 group-[.active]:opacity-100">02. MEAT</h3>
+                    <p class="text-2xl text-gray-400 font-light leading-relaxed max-w-md translate-y-10 opacity-0 transition-all duration-700 delay-100 group-[.active]:translate-y-0 group-[.active]:opacity-100">
+                        A proprietary blend of Wagyu and Angus brisket. Never frozen. Smashed to create the perfect Maillard reaction crust.
+                    </p>
+                    <div class="mt-6 flex gap-4 opacity-0 transition-all duration-700 delay-200 group-[.active]:opacity-100">
+                        <span class="px-3 py-1 border border-[#ccff00] text-[#ccff00] text-xs uppercase tracking-widest rounded-full">Juicy</span>
+                        <span class="px-3 py-1 border border-white/20 text-gray-400 text-xs uppercase tracking-widest rounded-full">A5 Grade</span>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="anatomy-step min-h-[80vh] flex flex-col justify-center border-l-2 border-white/10 pl-10 relative group" data-index="2">
+                    <span class="absolute -left-[9px] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ccff00] rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity duration-300 shadow-[0_0_20px_#ccff00]"></span>
+                    <h3 class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] to-white font-display text-7xl md:text-8xl mb-6 translate-x-[-50px] opacity-0 transition-all duration-700 group-[.active]:translate-x-0 group-[.active]:opacity-100">03. SAUCE</h3>
+                    <p class="text-2xl text-gray-400 font-light leading-relaxed max-w-md translate-y-10 opacity-0 transition-all duration-700 delay-100 group-[.active]:translate-y-0 group-[.active]:opacity-100">
+                        Our secret "Neon Sauce". A spicy aioli infused with smoked paprika and caramelized onions. Addictive by design.
+                    </p>
+                    <div class="mt-6 flex gap-4 opacity-0 transition-all duration-700 delay-200 group-[.active]:opacity-100">
+                        <span class="px-3 py-1 border border-[#ccff00] text-[#ccff00] text-xs uppercase tracking-widest rounded-full">Spicy</span>
+                        <span class="px-3 py-1 border border-white/20 text-gray-400 text-xs uppercase tracking-widest rounded-full">Secret</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right: Sticky Image Container -->
+            <div class="w-full md:w-1/2 h-screen sticky top-0 flex items-center justify-center overflow-hidden">
+                
+                <!-- Background Glow -->
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#ccff00]/5 to-transparent opacity-50"></div>
+                
+                <!-- Image Wrapper -->
+                <div class="relative w-full h-[600px] max-w-lg">
+                    
+                    <!-- Decorative Circle -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border border-white/10 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] border border-[#ccff00]/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+
+                    <!-- Images -->
+                    <!-- Bun Image -->
+                    <img src="https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?q=80&w=1000&auto=format&fit=crop" 
+                         class="anatomy-img absolute inset-0 w-full h-full object-contain drop-shadow-2xl transition-all duration-700 opacity-0 scale-90 blur-sm" 
+                         data-index="0" alt="Bun">
+                    
+                    <!-- Meat Image -->
+                    <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop" 
+                         class="anatomy-img absolute inset-0 w-full h-full object-contain drop-shadow-2xl transition-all duration-700 opacity-0 scale-90 blur-sm" 
+                         data-index="1" alt="Meat">
+                    
+                    <!-- Sauce/Full Image -->
+                    <img src="https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?q=80&w=1000&auto=format&fit=crop" 
+                         class="anatomy-img absolute inset-0 w-full h-full object-contain drop-shadow-2xl transition-all duration-700 opacity-0 scale-90 blur-sm" 
+                         data-index="2" alt="Sauce">
+
+                    <!-- Scanner Effect -->
+                    <div class="absolute inset-0 z-20 pointer-events-none">
+                        <div class="w-full h-[2px] bg-[#ccff00] shadow-[0_0_20px_#ccff00] absolute top-0 animate-[scan_3s_ease-in-out_infinite]"></div>
+                    </div>
+
+                    <!-- HUD Elements -->
+                    <div class="absolute top-10 right-0 font-mono text-[10px] text-[#ccff00] flex flex-col items-end gap-1">
+                        <span>SCANNING...</span>
+                        <span>TARGET: <span id="target-name">UNKNOWN</span></span>
+                        <span>INTEGRITY: 100%</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="menu" class="py-32 bg-[#0a0a0a] relative">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-between items-end mb-20">
+                <h2 class="text-5xl md:text-7xl font-display">OUR <span class="text-[#ccff00] italic">DROP</span></h2>
+                <p class="hidden md:block text-right text-gray-500 max-w-xs text-sm">Limited editions and classic hits.<br>Warning: Highly Addictive.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <div class="group relative hover-trigger" data-cursor="YUMMY">
+                    <div class="h-[450px] bg-[#111] overflow-hidden relative border border-white/5 transition-colors group-hover:border-[#ccff00]/50">
+                        <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1998&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0" alt="Burger 1">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                        
+                        <div class="absolute bottom-0 left-0 p-8 w-full">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <h3 class="font-display text-3xl mb-1 group-hover:text-[#ccff00] transition-colors">The O.G.</h3>
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest">Double Beef / Bacon</p>
+                                </div>
+                                <span class="font-display text-2xl">$12</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group relative hover-trigger" data-cursor="SPICY">
+                    <div class="h-[450px] bg-[#111] overflow-hidden relative border border-white/5 transition-colors group-hover:border-[#ccff00]/50 mt-0 md:mt-16">
+                        <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=800&auto=format&fit=crop" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0" 
+                             alt="Neon Chicken Burger"
+                             onerror="this.src='https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?q=80&w=800&auto=format&fit=crop'"> <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                        
+                        <div class="absolute bottom-0 left-0 p-8 w-full">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <h3 class="font-display text-3xl mb-1 group-hover:text-[#ccff00] transition-colors">Neon Chicken</h3>
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest">Spicy Slaw / Aioli</p>
+                                </div>
+                                <span class="font-display text-2xl">$10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group relative hover-trigger" data-cursor="VEGAN">
+                    <div class="h-[450px] bg-[#111] overflow-hidden relative border border-white/5 transition-colors group-hover:border-[#ccff00]/50">
+                        <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1965&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0" alt="Burger 3">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                        
+                        <div class="absolute bottom-0 left-0 p-8 w-full">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <h3 class="font-display text-3xl mb-1 group-hover:text-[#ccff00] transition-colors">Green Cyber</h3>
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest">Plant Based / Avocado</p>
+                                </div>
+                                <span class="font-display text-2xl">$14</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 border-y border-white/5 bg-[#080808] overflow-hidden">
+        <div class="container mx-auto px-6 mb-10">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">They said it first</h3>
+        </div>
+        
+        <div class="flex whitespace-nowrap gap-10 reviews-track">
+            <div class="glass-panel p-10 w-[400px] rounded-none border-l-2 border-[#ccff00] whitespace-normal">
+                <div class="text-[#ccff00] mb-4 text-xl"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="font-display text-2xl uppercase leading-tight mb-4">"Best burger in the city, hands down."</p>
+                <p class="text-xs text-gray-500 uppercase tracking-widest">- Foodie Mag</p>
+            </div>
+             <div class="glass-panel p-10 w-[400px] rounded-none border-l-2 border-[#ccff00] whitespace-normal">
+                <div class="text-[#ccff00] mb-4 text-xl"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="font-display text-2xl uppercase leading-tight mb-4">"This is not food, this is art."</p>
+                <p class="text-xs text-gray-500 uppercase tracking-widest">- Chef Ramsey (Not really)</p>
+            </div>
+             <div class="glass-panel p-10 w-[400px] rounded-none border-l-2 border-[#ccff00] whitespace-normal">
+                <div class="text-[#ccff00] mb-4 text-xl"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="font-display text-2xl uppercase leading-tight mb-4">"The Neon Chicken changed my life."</p>
+                <p class="text-xs text-gray-500 uppercase tracking-widest">- Happy Customer</p>
+            </div>
+            <div class="glass-panel p-10 w-[400px] rounded-none border-l-2 border-[#ccff00] whitespace-normal">
+                <div class="text-[#ccff00] mb-4 text-xl"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p class="font-display text-2xl uppercase leading-tight mb-4">"Worth every single calorie."</p>
+                <p class="text-xs text-gray-500 uppercase tracking-widest">- Gym Rat</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="win" class="relative py-32 flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 bg-[#050505]">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#ccff00] rounded-full filter blur-[150px] opacity-10 animate-pulse"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10 w-full max-w-4xl">
+            <div class="glass-panel p-8 md:p-16 rounded-3xl border border-white/10 shadow-2xl relative">
+                
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-6xl font-display mb-2">WIN THE <span class="text-[#ccff00]">EPIC MEAL</span></h2>
+                    <p class="text-gray-400">Join the elite list. One winner every Friday.</p>
+                </div>
+
+                <form class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="relative group">
+                            <input type="text" placeholder="YOUR NAME" class="w-full bg-transparent border-b border-gray-700 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#ccff00] transition-colors uppercase font-bold tracking-wider">
+                        </div>
+                        <div class="relative group">
+                            <input type="email" placeholder="YOUR EMAIL" class="w-full bg-transparent border-b border-gray-700 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#ccff00] transition-colors uppercase font-bold tracking-wider">
+                        </div>
+                    </div>
+                    
+                    <div class="relative group pt-4">
+                        <input type="text" placeholder="WHY DO YOU DESERVE THIS BURGER?" class="w-full bg-transparent border-b border-gray-700 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#ccff00] transition-colors uppercase font-bold tracking-wider">
+                    </div>
+
+                    <div class="pt-10 flex justify-center">
+                        <button type="button" class="btn-neon px-12 py-4 rounded-full text-xl hover-trigger" data-cursor="SEND IT">
+                            <span class="relative z-10">ENTER TO WIN</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="absolute top-0 right-0 p-4 opacity-30">
+                    <i class="fas fa-crown text-6xl text-white"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ: The Truth -->
+    <section class="py-24 bg-[#0a0a0a] relative overflow-hidden">
+        <div class="container mx-auto px-6 max-w-4xl relative z-10">
+            <h2 class="text-4xl md:text-7xl font-display mb-16 text-center uppercase">The <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Truth</span></h2>
+
+            <div class="space-y-4">
+                <div class="faq-item border-b border-white/10 pb-4 group">
+                    <button class="w-full flex justify-between items-center text-left py-4 hover:pl-4 transition-all duration-300">
+                        <span class="font-display text-2xl md:text-3xl text-gray-300 group-hover:text-[#ccff00] transition-colors">DO YOU DELIVER TO MY CAVE?</span>
+                        <i class="fas fa-plus text-white group-hover:text-[#ccff00] transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content h-0 overflow-hidden transition-all duration-500 ease-out">
+                        <p class="text-gray-500 pb-4 pt-2 text-lg">We deliver within a 10km radius to ensure maximum freshness. If you are outside, move closer. It's worth it.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item border-b border-white/10 pb-4 group">
+                    <button class="w-full flex justify-between items-center text-left py-4 hover:pl-4 transition-all duration-300">
+                        <span class="font-display text-2xl md:text-3xl text-gray-300 group-hover:text-[#ccff00] transition-colors">IS IT REALLY SPICY?</span>
+                        <i class="fas fa-plus text-white group-hover:text-[#ccff00] transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content h-0 overflow-hidden transition-all duration-500 ease-out">
+                        <p class="text-gray-500 pb-4 pt-2 text-lg">The Neon Chicken has a kick, but it won't kill you. It's a pleasant burn that makes you feel alive. We can remove the jalapeños if you ask nicely.</p>
+                    </div>
+                </div>
+
+                 <div class="faq-item border-b border-white/10 pb-4 group">
+                    <button class="w-full flex justify-between items-center text-left py-4 hover:pl-4 transition-all duration-300">
+                        <span class="font-display text-2xl md:text-3xl text-gray-300 group-hover:text-[#ccff00] transition-colors">CAN I BOOK A TABLE?</span>
+                        <i class="fas fa-plus text-white group-hover:text-[#ccff00] transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content h-0 overflow-hidden transition-all duration-500 ease-out">
+                        <p class="text-gray-500 pb-4 pt-2 text-lg">We work on a first-come, first-served basis. However, if you join our "Win Epic Meal" list, you might get a VIP pass.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black py-10 border-t border-white/10 text-center relative z-10">
+        <p class="font-display text-[#ccff00] text-9xl opacity-5 select-none absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap">
+            EPIC TASTE 2025
+        </p>
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 uppercase tracking-widest relative z-10">
+            <p>&copy; 2025 Epic Burger Inc.</p>
+            <div class="flex gap-6 mt-4 md:mt-0">
+                <a href="#" class="hover:text-white transition-colors">Insta</a>
+                <a href="#" class="hover:text-white transition-colors">Tiktok</a>
+                <a href="#" class="hover:text-white transition-colors">X</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Order Modal (hidden by default) -->
+    <div id="order-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/90 backdrop-blur-md opacity-0">
+        
+        <div class="modal-content relative bg-[#0a0a0a] border border-white/10 w-full max-w-2xl p-8 md:p-12 rounded-3xl shadow-[0_0_50px_rgba(204,255,0,0.1)]">
+            
+            <button id="close-order-btn" class="absolute top-6 right-6 text-gray-400 hover:text-[#ccff00] transition-colors text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h2 class="font-display text-4xl mb-2">YOUR <span class="text-[#ccff00]">ORDER</span></h2>
+            <p class="text-gray-500 text-sm mb-8 uppercase tracking-widest">Select your weapon of choice</p>
+
+            <div class="space-y-4 mb-8">
+                <div class="flex items-center justify-between p-4 border border-white/5 rounded-xl hover:border-[#ccff00]/50 transition-colors cursor-pointer group bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=100&auto=format&fit=crop" class="w-16 h-16 rounded-lg object-cover">
+                        <div>
+                            <h4 class="font-bold group-hover:text-[#ccff00] transition-colors">The O.G.</h4>
+                            <p class="text-xs text-gray-400">$12.00</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ccff00] hover:text-black transition-colors">-</button>
+                        <span class="font-display w-4 text-center">1</span>
+                        <button class="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ccff00] hover:text-black transition-colors">+</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 border border-white/5 rounded-xl hover:border-[#ccff00]/50 transition-colors cursor-pointer group bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=100&auto=format&fit=crop" class="w-16 h-16 rounded-lg object-cover">
+                        <div>
+                            <h4 class="font-bold group-hover:text-[#ccff00] transition-colors">Neon Chicken</h4>
+                            <p class="text-xs text-gray-400">$10.00</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ccff00] hover:text-black transition-colors">-</button>
+                        <span class="font-display w-4 text-center">0</span>
+                        <button class="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ccff00] hover:text-black transition-colors">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-white/10 pt-6">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Total Amount</p>
+                    <p class="font-display text-3xl text-[#ccff00]">$12.00</p>
+                </div>
+                <button class="btn-neon px-8 py-3 rounded-full text-sm font-bold tracking-widest hover-trigger" data-cursor="PAY NOW">
+                    <span class="relative z-10">Checkout <i class="fas fa-arrow-right ml-2"></i></span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- 1. PRELOADER LOGIC ---
+        // Deshabilitar scroll durante carga
+        document.body.style.overflow = 'hidden';
+
+        const countElement = document.getElementById('loader-count');
+        let count = 0;
+
+        const updateCount = () => {
+            if (count < 100) {
+                count += Math.floor(Math.random() * 5) + 1; // Incremento aleatorio
+                if (count > 100) count = 100;
+                countElement.innerText = count + '%';
+                requestAnimationFrame(updateCount);
+            } else {
+                // Cuando llega a 100%
+                finishLoader();
+            }
+        };
+
+        // Simular tiempo de carga
+        setTimeout(updateCount, 10);
+
+        function finishLoader() {
+            const tl = gsap.timeline();
+
+            tl.to("#loader-count", {
+                duration: 0.5,
+                opacity: 0,
+                delay: 0.2
+            })
+            .to("#preloader", {
+                duration: 1,
+                yPercent: -100,
+                ease: "power4.inOut",
+                onComplete: () => {
+                    document.body.style.overflow = ''; // Reactivar scroll
+                    // Disparar animaciones del Hero una vez cargado
+                    initHeroAnimations();
+                }
+            });
+        }
+
+        function initHeroAnimations() {
+            gsap.from(".animate-title", {
+                y: 100, opacity: 0, duration: 1.5, ease: "power4.out"
+            });
+            gsap.from(".animate-reveal", {
+                y: 50, opacity: 0, duration: 1, ease: "power3.out", delay: 0.3
+            });
+            gsap.from(".animate-reveal-btn", {
+                scale: 0.8, opacity: 0, duration: 1, ease: "elastic.out(1, 0.5)", delay: 0.6
+            });
+        }
+
+        // --- 2. SMOOTH SCROLL (Lenis) ---
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // --- 3. CURSOR DINÁMICO ---
+        const cursor = document.getElementById('cursor');
+        const hoverTriggers = document.querySelectorAll('.hover-trigger');
+
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        });
+
+        hoverTriggers.forEach(trigger => {
+            trigger.addEventListener('mouseenter', () => {
+                document.body.classList.add('hovered');
+                const text = trigger.getAttribute('data-cursor');
+                if (text) {
+                    cursor.style.mixBlendMode = "normal";
+                    cursor.innerHTML = `<span style="font-size:10px; font-weight:800; color:black; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); white-space:nowrap;">${text}</span>`;
+                }
+            });
+            trigger.addEventListener('mouseleave', () => {
+                document.body.classList.remove('hovered');
+                cursor.innerHTML = '';
+                cursor.style.mixBlendMode = "difference";
+            });
+        });
+
+        // --- 4. MAGNETIC BUTTON EFFECT ---
+        // Hace que los botones se sientan "magnéticos" al mouse
+        const btns = document.querySelectorAll('.btn-neon');
+        
+        btns.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                // Mueve el botón ligeramente hacia el mouse
+                gsap.to(btn, {
+                    x: x * 0.3,
+                    y: y * 0.3,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                // Vuelve a la posición original
+                gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+
+
+        // --- 5. REVIEWS SCROLL INFINITO ---
+        // Mueve las reviews hacia la izquierda infinitamente
+        gsap.to(".reviews-track", {
+            xPercent: -50,
+            ease: "none",
+            duration: 20,
+            repeat: -1
+        });
+
+
+        // --- 6. ANIMACIONES GENERALES ---
+        // Imagen About
+        gsap.to(".reveal-image img", {
+            yPercent: 20,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".reveal-image",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        // Elementos flotantes
+        gsap.utils.toArray(".parallax-element").forEach((el) => {
+            const speed = el.getAttribute("data-speed");
+            gsap.to(el, {
+                y: -100 * speed,
+                scrollTrigger: { trigger: el, start: "top bottom", scrub: true }
+            });
+        });
+
+        // Contadores
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = +counter.getAttribute('data-target');
+            gsap.to(counter, {
+                innerHTML: target,
+                duration: 2,
+                snap: { innerHTML: 1 },
+                scrollTrigger: { trigger: counter, start: "top 85%" }
+            });
+        });
+
+        // Cards Stagger
+        gsap.from("#menu .group", {
+            y: 100, opacity: 0, stagger: 0.2, duration: 1, ease: "power3.out",
+            scrollTrigger: { trigger: "#menu", start: "top 70%" }
+        });
+
+        // --- 8. ANATOMY SECTION LOGIC (REMASTERED) ---
+        const anatomySteps = document.querySelectorAll('.anatomy-step');
+        const anatomyImages = document.querySelectorAll('.anatomy-img');
+        const targetName = document.getElementById('target-name');
+        const targetNames = ["BRIOCHE_BUN_V2", "WAGYU_BLEND_A5", "NEON_SAUCE_X"];
+
+        anatomySteps.forEach((step, index) => {
+            ScrollTrigger.create({
+                trigger: step,
+                start: "top center",
+                end: "bottom center",
+                onEnter: () => updateAnatomy(index),
+                onEnterBack: () => updateAnatomy(index),
+            });
+        });
+
+        function updateAnatomy(index) {
+            // Update Text Active State
+            anatomySteps.forEach((el, i) => {
+                if (i === index) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            // Update Images
+            anatomyImages.forEach((img, i) => {
+                if (i === index) {
+                    gsap.to(img, { opacity: 1, scale: 1.1, filter: "blur(0px)", duration: 0.5, ease: "power2.out" });
+                } else {
+                    gsap.to(img, { opacity: 0, scale: 0.9, filter: "blur(10px)", duration: 0.5, ease: "power2.out" });
+                }
+            });
+
+            // Update HUD Text with glitch effect
+            if (targetName) {
+                const newText = targetNames[index];
+                let iterations = 0;
+                const interval = setInterval(() => {
+                    targetName.innerText = newText.split("")
+                        .map((letter, i) => {
+                            if (i < iterations) return newText[i];
+                            return String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                        })
+                        .join("");
+                    
+                    if (iterations >= newText.length) clearInterval(interval);
+                    iterations += 1 / 2; 
+                }, 30);
+            }
+        }
+
+        // --- 9. FAQ ACCORDION LOGIC ---
+        const faqs = document.querySelectorAll('.faq-item button');
+        
+        faqs.forEach(faq => {
+            faq.addEventListener('click', () => {
+                const item = faq.parentElement;
+                const content = item.querySelector('.faq-content');
+                
+                // Toggle clase active
+                item.classList.toggle('active');
+                
+                // Animar altura
+                if (item.classList.contains('active')) {
+                    gsap.to(content, { height: "auto", duration: 0.5, ease: "power2.out" });
+                } else {
+                    gsap.to(content, { height: 0, duration: 0.5, ease: "power2.out" });
+                }
+            });
+        });
+
+        // --- 7. ORDER MODAL LOGIC ---
+        const modal = document.getElementById('order-modal');
+        const openBtn = document.getElementById('open-order-btn');
+        const closeBtn = document.getElementById('close-order-btn');
+        const modalContent = document.querySelector('.modal-content');
+
+        if (openBtn && modal) {
+            openBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                gsap.to(modal, { opacity: 1, duration: 0.3 });
+                gsap.fromTo(modalContent,
+                    { y: 50, opacity: 0, scale: 0.95 },
+                    { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" }
+                );
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        function closeModal() {
+            if (!modal) return;
+            gsap.to(modal, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+    </script>
+</body>
+</html>
